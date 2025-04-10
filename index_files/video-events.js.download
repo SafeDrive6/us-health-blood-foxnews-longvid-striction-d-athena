@@ -1,0 +1,69 @@
+(function initVideoEvents() {
+  const timingPercent = 98;
+  const inlineOfferID = "offer-inline";
+  const offerInPopupID = "offer-popup";
+
+  let video = document.querySelector("video");
+  if (video) {
+    setupVideoEvents(video);
+  } else {
+    const observer = new MutationObserver((mutationsList) => {
+      mutationsList.forEach((mutation) => {
+        if (mutation.type === "childList") {
+          mutation.addedNodes.forEach((node) => {
+            if (node.tagName === "VIDEO") {
+              video = node;
+              setupVideoEvents(video);
+            }
+          });
+        }
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  const style = document.createElement("style");
+  style.innerText = "*[hidden] { display: none !important; }";
+  style.setAttribute("data-script", "video-events.js");
+  document.head.appendChild(style);
+
+  function setupVideoEvents(video) {
+    const showInlineOffer = () => {
+      const el = document.getElementById(inlineOfferID);
+      if (el) {
+        el.hidden = false;
+      }
+    };
+
+    const showOfferInPopup = () => {
+      const el = document.getElementById(offerInPopupID);
+      if (el) {
+        el.showModal();
+      }
+    };
+
+    const hideOfferInPopup = () => {
+      const el = document.getElementById(offerInPopupID);
+      if (el) {
+        el.close();
+      }
+    };
+
+    const popupCloseButton = document.querySelector("#offer-popup > button");
+    if (popupCloseButton) {
+      popupCloseButton.addEventListener("click", hideOfferInPopup);
+    }
+
+    video.addEventListener("timeupdate", () => {
+      const timing = video.duration * (timingPercent / 100);
+      if (video.currentTime > timing) {
+        showInlineOffer();
+      }
+    });
+
+    video.addEventListener("ended", () => {
+      showInlineOffer();
+      showOfferInPopup();
+    });
+  }
+})();
